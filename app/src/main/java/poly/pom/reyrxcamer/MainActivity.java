@@ -132,13 +132,14 @@ public class MainActivity extends AppCompatActivity {
                     e.printStackTrace();
                 }
 //                showLog("Save file on " + path);
+                StaticMethod.addToGallery(file, MainActivity.this);
                 Toast.makeText(MainActivity.this, "Save file on " + path, Toast.LENGTH_SHORT).show();
             }
         });
     }
 
 
-    private void centerFocus(View previewview, RxCamera camera) {
+    private void centerFocusAndTakePhoto(View previewview, RxCamera camera) {
         float centreX = previewview.getX() + previewview.getWidth() / 2;
         float centreY = previewview.getY() + previewview.getHeight() / 2;
         final Rect rect = CameraUtil.transferCameraAreaFromOuterSize(new Point((int) centreX, (int) centreY),
@@ -165,6 +166,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onNext(Object o) {
 //                showLog(String.format("area focus and metering success, x: %s, y: %s, area: %s", x, y, rect.toShortString()));
+                requestTakePicture();
             }
         });
     }
@@ -172,6 +174,6 @@ public class MainActivity extends AppCompatActivity {
     @OnClick(R.id.btTake)
     public void onClick() {
 //        requestTakePicture();
-        centerFocus(previewSurface, camera);
+        centerFocusAndTakePhoto(previewSurface, camera);
     }
 }
