@@ -1,7 +1,11 @@
 package poly.pom.reyrxcamer;
 
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.ImageFormat;
 import android.graphics.Point;
 import android.os.Bundle;
+import android.os.Environment;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.TextureView;
@@ -9,7 +13,13 @@ import android.widget.Button;
 import android.widget.Toast;
 
 import com.ragnarok.rxcamera.RxCamera;
+import com.ragnarok.rxcamera.RxCameraData;
 import com.ragnarok.rxcamera.config.RxCameraConfig;
+import com.ragnarok.rxcamera.request.Func;
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -17,6 +27,7 @@ import butterknife.OnClick;
 import rx.Observable;
 import rx.Subscriber;
 import rx.android.schedulers.AndroidSchedulers;
+import rx.functions.Action1;
 import rx.functions.Func1;
 
 public class MainActivity extends AppCompatActivity {
@@ -76,12 +87,52 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onNext(final RxCamera rxCamera) {
                 camera = rxCamera;
-                Toast.makeText(MainActivity.this, "Now you can tap to focus", Toast.LENGTH_LONG).show();
+                btTake.setEnabled(true);
             }
         });
     }
 
+    private boolean checkCamera() {
+        if (camera == null || !camera.isOpenCamera()) {
+            return false;
+        }
+        return true;
+    }
+
+    private void requestTakePicture() {
+        if (!checkCamera()) {
+            return;
+        }
+        camera.request().takePictureRequest(true, new Func() {
+            @Override
+            public void call() {
+
+            }
+        }, 480, 640, ImageFormat.JPEG, true).subscribe(new Action1<RxCameraData>() {
+            @Override
+            public void call(RxCameraData rxCameraData) {
+                String path = Environment.getExternalStorageDirectory() + "/test.jpg";
+                File file = new File(path);
+                Bitmap bitmap = BitmapFactory.decodeByteArray(rxCameraData.cameraData, 0, rxCameraData.cameraData.length);
+                bitmap = Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(),
+                        rxCameraData.rotateMatrix, false);
+                try {
+                    file.createNewFile();
+                    FileOutputStream fos = new FileOutputStream(file);
+                    bitmap.compress(Bitmap.CompressFormat.JPEG, 100, fos);
+                    fos.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+//                showLog("Save file on " + path);
+                Toast.makeText(MainActivity.this, "Save file on " + path, Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+
     @OnClick(R.id.btTake)
     public void onClick() {
+        requestTakePicture();
     }
 }
