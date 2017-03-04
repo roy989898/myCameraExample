@@ -115,7 +115,7 @@ public class MainActivity extends AppCompatActivity {
             public void call() {
 
             }
-        }, 480, 640, ImageFormat.JPEG, true).subscribe(new Action1<RxCameraData>() {
+        }, 1920, 1080, ImageFormat.JPEG, true).subscribe(new Action1<RxCameraData>() {
             @Override
             public void call(RxCameraData rxCameraData) {
                 String path = Environment.getExternalStorageDirectory() + "/test.jpg";
