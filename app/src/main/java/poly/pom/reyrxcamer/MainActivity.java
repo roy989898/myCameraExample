@@ -4,22 +4,28 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.ImageFormat;
 import android.graphics.Point;
+import android.graphics.Rect;
+import android.hardware.Camera;
 import android.os.Bundle;
 import android.os.Environment;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.TextureView;
+import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
 
 import com.ragnarok.rxcamera.RxCamera;
 import com.ragnarok.rxcamera.RxCameraData;
+import com.ragnarok.rxcamera.config.CameraUtil;
 import com.ragnarok.rxcamera.config.RxCameraConfig;
 import com.ragnarok.rxcamera.request.Func;
 
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.Collections;
+import java.util.List;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -29,6 +35,7 @@ import rx.Subscriber;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.functions.Action1;
 import rx.functions.Func1;
+import rx.functions.Func2;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -131,8 +138,40 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
+    private void centerFocus(View previewview, RxCamera camera) {
+        float centreX = previewview.getX() + previewview.getWidth() / 2;
+        float centreY = previewview.getY() + previewview.getHeight() / 2;
+        final Rect rect = CameraUtil.transferCameraAreaFromOuterSize(new Point((int) centreX, (int) centreY),
+                new Point(previewview.getWidth(), previewview.getHeight()), 100);
+        List<Camera.Area> areaList = Collections.singletonList(new Camera.Area(rect, 1000));
+        Observable.zip(camera.action().areaFocusAction(areaList),
+                camera.action().areaMeterAction(areaList),
+                new Func2<RxCamera, RxCamera, Object>() {
+                    @Override
+                    public Object call(RxCamera rxCamera, RxCamera rxCamera2) {
+                        return rxCamera;
+                    }
+                }).subscribe(new Subscriber<Object>() {
+            @Override
+            public void onCompleted() {
+
+            }
+
+            @Override
+            public void onError(Throwable e) {
+//                showLog("area focus and metering failed: " + e.getMessage());
+            }
+
+            @Override
+            public void onNext(Object o) {
+//                showLog(String.format("area focus and metering success, x: %s, y: %s, area: %s", x, y, rect.toShortString()));
+            }
+        });
+    }
+
     @OnClick(R.id.btTake)
     public void onClick() {
-        requestTakePicture();
+//        requestTakePicture();
+        centerFocus(previewSurface, camera);
     }
 }
